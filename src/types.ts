@@ -105,7 +105,9 @@ type InstantiatedVertex<
   InstantiatedOutboundEdges<VertexLabel, EdgeLabel, G, CurrentVertexLabel> &
   InstantiatedInboundEdges<VertexLabel, EdgeLabel, G, CurrentVertexLabel>;
 
-type InstantiatedInboundEdges<
+// helpers
+
+type InboundEdgeLabels<
   VertexLabel extends string,
   EdgeLabel extends string,
   G extends GraphDefinition<VertexLabel, EdgeLabel>,
@@ -114,18 +116,55 @@ type InstantiatedInboundEdges<
   [V in VertexLabel]: {
     [E in EdgeLabel]: G["vertices"][V]["edges"][E] extends EdgeRecord<CurrentVertexLabel>
       ? G["vertices"][V]["edges"][E]["destination"] extends CurrentVertexLabel
-        ? {
-            [K in ReversedEdgeLabel<
-              VertexLabel,
-              EdgeLabel,
-              G,
-              E
-            >]: InstantiatedEdge<VertexLabel, EdgeLabel, G, V, E>;
-          }
+        ? E
         : never
       : never;
   }[EdgeLabel];
 }[VertexLabel];
+
+type VertexLabelsForInboundEdge<
+  VertexLabel extends string,
+  EdgeLabel extends string,
+  G extends GraphDefinition<VertexLabel, EdgeLabel>,
+  CurrentVertexLabel extends VertexLabel,
+  CurrentEdgeLabel extends EdgeLabel,
+> = {
+  [V in VertexLabel]: {
+    [E in CurrentEdgeLabel]: G["vertices"][V]["edges"][E] extends EdgeRecord<CurrentVertexLabel>
+      ? G["vertices"][V]["edges"][E]["destination"] extends CurrentVertexLabel
+        ? V
+        : never
+      : never;
+  }[CurrentEdgeLabel];
+}[VertexLabel];
+
+type InstantiatedInboundEdges<
+  VertexLabel extends string,
+  EdgeLabel extends string,
+  G extends GraphDefinition<VertexLabel, EdgeLabel>,
+  CurrentVertexLabel extends VertexLabel,
+> = {
+  [L in InboundEdgeLabels<
+    VertexLabel,
+    EdgeLabel,
+    G,
+    CurrentVertexLabel
+  > as ReversedEdgeLabel<VertexLabel, EdgeLabel, G, L>]: InstantiatedEdge<
+    VertexLabel,
+    EdgeLabel,
+    G,
+    VertexLabelsForInboundEdge<
+      VertexLabel,
+      EdgeLabel,
+      G,
+      CurrentVertexLabel,
+      L
+    >,
+    L
+  >;
+};
+
+////
 
 type InstantiatedOutboundEdges<
   VertexLabel extends string,
@@ -214,11 +253,18 @@ const g = {
     },
     bone: {
       fields: {},
-      edges: {},
+      edges: {
+        fears: {
+          destination: "dog",
+        },
+      },
     },
     user: {
       edges: {
         owns: {
+          destination: "dog",
+        },
+        fears: {
           destination: "dog",
         },
       },
@@ -242,41 +288,34 @@ const g = {
       fields: {},
       reverse: "ownedBy",
     },
+    fears: {
+      fields: {},
+      reverse: "fearedBy",
+    },
   },
 } as const satisfies GraphDefinition<
   "bone" | "dog" | "user",
-  "chews" | "owns" | "loves"
+  "chews" | "owns" | "loves" | "fears"
 >;
-
-let ie: InstantiatedInboundEdges<
-  "bone" | "dog" | "user",
-  "chews" | "owns" | "loves",
-  typeof g,
-  "dog"
->;
-
-ie;
-
-let ed: EdgeDestination<"bone" | "dog", "chews", typeof g, "dog", "chews"> =
-  "bone";
 
 let dog: InstantiatedVertex<
   "bone" | "dog" | "user",
-  "chews" | "owns" | "loves",
+  "chews" | "owns" | "loves" | "fears",
   typeof g,
   "dog"
 >;
 let bone: InstantiatedVertex<
   "bone" | "dog" | "user",
-  "chews" | "owns" | "loves",
+  "chews" | "owns" | "loves" | "fears",
   typeof g,
   "bone"
 >;
 let user: InstantiatedVertex<
   "bone" | "dog" | "user",
-  "chews" | "owns" | "loves",
+  "chews" | "owns" | "loves" | "fears",
   typeof g,
   "user"
 >;
 
-user.owns.dog.loves.user.owns.dog.chews.bone;
+user.owns.dog.ownedBy.user.lovedBy.dog.chews.bone.chewedBy.dog.fearedBy.user
+  .owns.dog;
