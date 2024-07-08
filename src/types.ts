@@ -15,10 +15,15 @@ type EdgeRecord<VertexLabel extends string> = {
 
 type VertexSchema<VertexLabel extends string, EdgeLabel extends string> = {
   fields: SchemaDefinition;
-  edges?: Partial<{
-    [L in EdgeLabel]: EdgeRecord<VertexLabel>;
-  }>;
+  edges: VertexEdges<VertexLabel, EdgeLabel>;
 };
+
+type VertexEdges<
+  VertexLabel extends string,
+  EdgeLabel extends string,
+> = Partial<{
+  [L in EdgeLabel]: EdgeRecord<VertexLabel>;
+}>;
 
 type GraphVertices<VertexLabel extends string, EdgeLabel extends string> = {
   [L in VertexLabel]: VertexSchema<VertexLabel, EdgeLabel>;
@@ -26,6 +31,7 @@ type GraphVertices<VertexLabel extends string, EdgeLabel extends string> = {
 
 type EdgeSchema = {
   fields?: SchemaDefinition;
+  reverse: string;
 };
 
 type GraphEdges<EdgeLabel extends string> = {
@@ -64,9 +70,10 @@ type EdgeDestination<
   CurrentEdgeLabel extends EdgeLabel,
 > =
   G["vertices"][CurrentVertexLabel] extends VertexSchema<VertexLabel, EdgeLabel>
-    ? G["vertices"][CurrentVertexLabel]["edges"] extends Partial<{
-        [L in EdgeLabel]: EdgeRecord<VertexLabel>;
-      }>
+    ? G["vertices"][CurrentVertexLabel]["edges"] extends VertexEdges<
+        VertexLabel,
+        EdgeLabel
+      >
       ? G["vertices"][CurrentVertexLabel]["edges"][CurrentEdgeLabel] extends EdgeRecord<VertexLabel>
         ? G["vertices"][CurrentVertexLabel]["edges"][CurrentEdgeLabel]["destination"]
         : never
@@ -95,7 +102,30 @@ type InstantiatedVertex<
       : never
     : never
 > &
-  InstantiatedOutboundEdges<VertexLabel, EdgeLabel, G, CurrentVertexLabel>;
+  InstantiatedOutboundEdges<VertexLabel, EdgeLabel, G, CurrentVertexLabel> &
+  InstantiatedInboundEdges<VertexLabel, EdgeLabel, G, CurrentVertexLabel>;
+
+type InstantiatedInboundEdges<
+  VertexLabel extends string,
+  EdgeLabel extends string,
+  G extends GraphDefinition<VertexLabel, EdgeLabel>,
+  CurrentVertexLabel extends VertexLabel,
+> = {
+  [V in VertexLabel]: {
+    [E in EdgeLabel]: G["vertices"][V]["edges"][E] extends EdgeRecord<CurrentVertexLabel>
+      ? G["vertices"][V]["edges"][E]["destination"] extends CurrentVertexLabel
+        ? {
+            [K in ReversedEdgeLabel<
+              VertexLabel,
+              EdgeLabel,
+              G,
+              E
+            >]: InstantiatedEdge<VertexLabel, EdgeLabel, G, V, E>;
+          }
+        : never
+      : never;
+  }[EdgeLabel];
+}[VertexLabel];
 
 type InstantiatedOutboundEdges<
   VertexLabel extends string,
@@ -103,7 +133,7 @@ type InstantiatedOutboundEdges<
   G extends GraphDefinition<VertexLabel, EdgeLabel>,
   CurrentVertexLabel extends VertexLabel,
 > = {
-  [K in keyof G["vertices"][CurrentVertexLabel]["edges"]]: InstantiatedOutboundEdge<
+  [K in keyof G["vertices"][CurrentVertexLabel]["edges"]]: InstantiatedEdge<
     VertexLabel,
     EdgeLabel,
     G,
@@ -114,7 +144,7 @@ type InstantiatedOutboundEdges<
   >;
 };
 
-type InstantiatedOutboundEdge<
+type InstantiatedEdge<
   VertexLabel extends string,
   EdgeLabel extends string,
   G extends GraphDefinition<VertexLabel, EdgeLabel>,
@@ -139,6 +169,13 @@ type InstantiatedOutboundEdge<
       : never
     : never
 >;
+
+type ReversedEdgeLabel<
+  VertexLabel extends string,
+  EdgeLabel extends string,
+  G extends GraphDefinition<VertexLabel, EdgeLabel>,
+  CurrentEdgeLabel extends EdgeLabel,
+> = G["edges"][CurrentEdgeLabel]["reverse"];
 
 type InstantiatedPropertyTraversals<V extends SchemaDefinition> = {
   [K in keyof V]: PropertyTraversal<V[K]>;
@@ -177,6 +214,7 @@ const g = {
     },
     bone: {
       fields: {},
+      edges: {},
     },
     user: {
       edges: {
@@ -194,18 +232,30 @@ const g = {
           type: "date",
         },
       },
+      reverse: "chewedBy",
     },
     loves: {
       fields: {},
+      reverse: "lovedBy",
     },
     owns: {
       fields: {},
+      reverse: "ownedBy",
     },
   },
 } as const satisfies GraphDefinition<
   "bone" | "dog" | "user",
   "chews" | "owns" | "loves"
 >;
+
+let ie: InstantiatedInboundEdges<
+  "bone" | "dog" | "user",
+  "chews" | "owns" | "loves",
+  typeof g,
+  "dog"
+>;
+
+ie;
 
 let ed: EdgeDestination<"bone" | "dog", "chews", typeof g, "dog", "chews"> =
   "bone";
