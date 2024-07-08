@@ -1,3 +1,115 @@
+interface TokkieGraphTraversal {
+  and(...args: TokkieGraphTraversal[]): this;
+  any(...args: TokkiePredicate[]): this;
+  as(...label: string[]): this;
+  barrier(arg?: number): this;
+  by(...args: any): this;
+  cap(...args: string[]): this;
+  coalesce(...args: TokkieGraphTraversal[]): this;
+  coin(args: number): this;
+  // concat
+  // conjoin
+  // connectedComponent
+  // constant
+  count(): PropertyTraversal<{ type: "number" }>;
+  // cyclicPath
+  // dateAdd
+  // dateDiff
+  dedup(): this;
+  // difference
+  // disjunct
+  drop(): NullTraversal;
+  // e
+  // element
+  // elementMap
+  // emit
+  // explain
+  fail(): NullTraversal;
+  map(): this;
+  flatMap(): this;
+  format(args: string): PropertyTraversal<{ type: "string" }>;
+  fold(): this;
+  fold(...args: any[]): this;
+  // from
+  // group
+  // groupCount
+  has(): this;
+  hasId(): this;
+  hasKey(): this;
+  id(): PropertyTraversal<{ type: "number" }>;
+  identity(): this;
+  // index
+  // inject
+  // intersect
+  // is
+  // key
+  // label
+  // length
+  // limit
+  // loops
+  // ltrim
+  // map
+  // match
+  // math
+  // max
+  // mean
+  // merge
+  // mergeEdge // will not be supported
+  // mergeVertex // will not be supported
+  // min
+  // none
+  // not
+  // option
+  // optional
+  // or
+  // order step
+  // pagerank
+  // path
+  // peerPressure
+  // product
+  // profile
+  // project
+  // program
+  // properties
+  // property
+  // propertyMap
+  // range
+  // read
+  // repeat
+  // replace
+  // reverse
+  // rtrim
+  // sack
+  // select
+  // shortestPath
+  // sideEffect
+  // skip
+  // split
+  // subgraph
+  // substring
+  // sum
+  // tail
+  // timeLimit
+  // to
+  // toLower
+  // toUpper
+  // tree
+  // trim
+  // unfold
+  // union
+  // until
+  // v
+  // value
+  // valueMap
+  // values
+  // vertex
+  // where
+  // with
+  // write
+}
+
+type TokkiePredicate = TokkieGraphTraversal;
+
 type EdgeCardinality = "oneToOne" | "oneToMany" | "manyToOne" | "manyToMany";
 type SchemaField = {
   type: "string" | "number" | "boolean" | "date";
@@ -103,8 +215,8 @@ type InstantiatedVertex<
     : never
 > &
   InstantiatedOutboundEdges<VertexLabel, EdgeLabel, G, CurrentVertexLabel> &
-  InstantiatedInboundEdges<VertexLabel, EdgeLabel, G, CurrentVertexLabel>;
-
+  InstantiatedInboundEdges<VertexLabel, EdgeLabel, G, CurrentVertexLabel> &
+  TokkieGraphTraversal;
 // helpers
 
 type InboundEdgeLabels<
@@ -234,6 +346,8 @@ type PropertyTraversal<S extends SchemaField> = {
   >;
 };
 
+type NullTraversal = {};
+
 const g = {
   vertices: {
     dog: {
@@ -317,5 +431,6 @@ let user: InstantiatedVertex<
   "user"
 >;
 
-user.owns.dog.ownedBy.user.lovedBy.dog.chews.bone.chewedBy.dog.fearedBy.user
-  .owns.dog;
+user.owns.dog.ownedBy.user.lovedBy.dog.chews.bone.chewedBy.dog.fearedBy.user.owns.dog
+  .as("dog")
+  .fearedBy.user.coin(1);
