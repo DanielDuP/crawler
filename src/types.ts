@@ -1,42 +1,64 @@
-interface TokkieGraphTraversal {
-  and(...args: TokkieGraphTraversal[]): this;
+import { process } from "gremlin";
+
+export type GenericConstructor<T = {}> = new (...args: any[]) => T;
+
+export type Traversal =
+  | process.GraphTraversal
+  | {
+      $: process.GraphTraversal;
+    }
+  | (() => Traversal);
+
+// Base properties
+export type BaseTraversal = {
+  $: process.GraphTraversal;
+  context: TraversalContext;
+};
+
+export type TraversalContext = {
+  constructorMap: Record<string, Constructor<any>>;
+};
+
+export type Constructor<T> = new (
+  label: string,
+  $: process.GraphTraversal,
+  context: TraversalContext,
+) => T;
+
+interface IntransitiveTraversalMethods {
+  and(...args: Traversal[]): this;
   any(...args: TokkiePredicate[]): this;
   as(...label: string[]): this;
   barrier(arg?: number): this;
   by(...args: any): this;
   cap(...args: string[]): this;
-  coalesce(...args: TokkieGraphTraversal[]): this;
+  coalesce(...args: Traversal[]): this;
   coin(args: number): this;
   // concat
   // conjoin
   // connectedComponent
   // constant
-  count(): PropertyTraversal<{ type: "number" }>;
   // cyclicPath
   // dateAdd
   // dateDiff
   dedup(): this;
   // difference
   // disjunct
-  drop(): NullTraversal;
-  // e
   // element
   // elementMap
   // emit
   // explain
-  fail(): NullTraversal;
-  map(): this;
-  flatMap(): this;
-  format(args: string): PropertyTraversal<{ type: "string" }>;
+  map(traversal: Traversal[]): this;
+  flatMap(traversal: Traversal[]): this;
   fold(): this;
   fold(...args: any[]): this;
-  // from
+  from(arg: string): this;
+  from(arg: Traversal): this;
   // group
   // groupCount
   has(): this;
   hasId(): this;
   hasKey(): this;
-  id(): PropertyTraversal<{ type: "number" }>;
   identity(): this;
   // index
   // inject
@@ -82,7 +104,7 @@ interface TokkieGraphTraversal {
   // sack
   // select
   // shortestPath
-  // sideEffect
+  sideEffect(callback: (traversal: this) => Traversal): this;
   // skip
   // split
   // subgraph
@@ -103,12 +125,19 @@ interface TokkieGraphTraversal {
   // valueMap
   // values
   // vertex
-  // where
+  where(callback: (traversal: this) => Traversal): this;
   // with
   // write
 }
 
-type TokkiePredicate = TokkieGraphTraversal;
+export interface TraversalMethods {
+  count: () => ValueTraversal<number | undefined>;
+  id: () => ValueTraversal<number | undefined>;
+  drop: () => NullTraversal;
+  fail: (message?: string) => NullTraversal;
+}
+
+type TokkiePredicate = IntransitiveTraversalMethods;
 
 type EdgeCardinality = "oneToOne" | "oneToMany" | "manyToOne" | "manyToMany";
 type SchemaField = {
@@ -216,7 +245,7 @@ type InstantiatedVertex<
 > &
   InstantiatedOutboundEdges<VertexLabel, EdgeLabel, G, CurrentVertexLabel> &
   InstantiatedInboundEdges<VertexLabel, EdgeLabel, G, CurrentVertexLabel> &
-  TokkieGraphTraversal;
+  IntransitiveTraversalMethods;
 // helpers
 
 type InboundEdgeLabels<
@@ -332,8 +361,8 @@ type InstantiatedPropertyTraversals<V extends SchemaDefinition> = {
   [K in keyof V]: PropertyTraversal<V[K]>;
 };
 
-type PropertyTraversal<S extends SchemaField> = {
-  get<T extends S["type"]>(): Promise<
+export type PropertyTraversal<S extends SchemaField> = {
+  next<T extends S["type"]>(): Promise<
     T extends "string"
       ? string
       : T extends "number"
@@ -346,7 +375,13 @@ type PropertyTraversal<S extends SchemaField> = {
   >;
 };
 
-type NullTraversal = {};
+export type ValueTraversal<V extends any> = {
+  next(): Promise<V>;
+};
+
+export type NullTraversal = {
+  next(): Promise<void>;
+};
 
 const g = {
   vertices: {
@@ -433,4 +468,4 @@ let user: InstantiatedVertex<
 
 user.owns.dog.ownedBy.user.lovedBy.dog.chews.bone.chewedBy.dog.fearedBy.user.owns.dog
   .as("dog")
-  .fearedBy.user.coin(1);
+  .fearedBy.user.where((traversal) => traversal.has().owns);
