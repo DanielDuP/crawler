@@ -18,7 +18,7 @@ export type HasProperties<S extends SchemaDefinition> =
 export function HasPropertiesMixin<
   TBase extends GenericConstructor<BaseTraversal>,
   S extends SchemaDefinition,
->(Base: TBase, label: string) {
+>(Base: TBase, schema: S) {
   return class extends Base implements HasPropertiesStatic<S> {
     property<K extends keyof S>(
       key: K,

@@ -1,5 +1,6 @@
 # Tokkie
 
+[WORK IN PROGRESS - PLEASE MIND MY DUST]
 Tokkie is a lightweight ORM designed for the Gremlin query language. It aims to provide a natural, Gremlin-like syntax while enforcing graph structure and properties through type inference from your schema declaration.
 
 ## Features
