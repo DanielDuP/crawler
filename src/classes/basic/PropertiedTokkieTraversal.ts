@@ -5,8 +5,8 @@ import {
   TraversalContext,
   TypeFromSchemaField,
 } from "../../types";
-import { TokkieBaseTraversal } from "./TokkieBaseTraversal";
 import { TokkieValueTraversal } from "./TokkieValueTraversal";
+import { LabeledTokkieTraversal } from "./LabeledTokkieTraversal";
 
 export interface HasPropertiesStatic<S extends SchemaDefinition> {
   setProperty<K extends keyof S>(
@@ -20,16 +20,17 @@ export interface HasPropertiesStatic<S extends SchemaDefinition> {
   getProperties(): Promise<RecordFromSchemaDefinition<S>>;
 }
 
-export class PropertiedTokkieTraversal<S extends SchemaDefinition>
-  extends TokkieBaseTraversal
+export abstract class PropertiedTokkieTraversal<S extends SchemaDefinition>
+  extends LabeledTokkieTraversal
   implements HasPropertiesStatic<S>
 {
   constructor(
     $: process.GraphTraversal,
     context: TraversalContext,
+    label: string,
     private propertySchema: SchemaDefinition,
   ) {
-    super($, context);
+    super($, context, label);
     this.setupProperties();
   }
 
