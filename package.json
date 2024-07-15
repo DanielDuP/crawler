@@ -11,11 +11,11 @@
   "license": "ISC",
   "devDependencies": {
     "@types/gremlin": "^3.6.7",
-    "typescript": "^5.5.3",
     "vitest": "^2.0.2"
   },
   "dependencies": {
     "gremlin": "^3.7.2",
+    "typescript": "^5.5.3",
     "zod": "^3.23.8"
   }
 }

@@ -11,6 +11,9 @@ importers:
       gremlin:
         specifier: ^3.7.2
         version: 3.7.2
+      typescript:
+        specifier: ^5.5.3
+        version: 5.5.3
       zod:
         specifier: ^3.23.8
         version: 3.23.8
@@ -18,9 +21,6 @@ importers:
       '@types/gremlin':
         specifier: ^3.6.7
         version: 3.6.7
-      typescript:
-        specifier: ^5.5.3
-        version: 5.5.3
       vitest:
         specifier: ^2.0.2
         version: 2.0.2
