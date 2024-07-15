@@ -1,3 +1,15 @@
+/*
+ * This file is still a bit rough, but sketches out the main idea.
+ * We basically need to build an arbitrary graph in TS types, using
+ * conditionals and mechanisms of inference. This graph will still
+ * be instantiated in Code, naturally, but this allows us to keep
+ * good type inference even after an arbitrary number of steps.
+ *
+ * Some of these types might need further expansion (i.e. value
+ * and property types for additional data types, but this sketches
+ * out, in brief, what the main thrust of this library is.)
+ */
+
 import { process } from "gremlin";
 
 export type GenericConstructor<T = {}> = new (...args: any[]) => T;
@@ -317,8 +329,6 @@ type InstantiatedInboundEdges<
   >;
 };
 
-////
-
 type InstantiatedOutboundEdges<
   VertexLabel extends string,
   EdgeLabel extends string,
@@ -394,90 +404,3 @@ export type ValueTraversal<V extends any> = {
 export type NullTraversal = {
   next(): Promise<void>;
 };
-
-const g = {
-  vertices: {
-    dog: {
-      fields: {
-        name: {
-          type: "string",
-        },
-      },
-      edges: {
-        chews: {
-          destination: "bone",
-        },
-        loves: {
-          destination: "user",
-        },
-      },
-    },
-    bone: {
-      fields: {},
-      edges: {
-        fears: {
-          destination: "dog",
-        },
-      },
-    },
-    user: {
-      edges: {
-        owns: {
-          destination: "dog",
-        },
-        fears: {
-          destination: "dog",
-        },
-      },
-      fields: {},
-    },
-  },
-  edges: {
-    chews: {
-      fields: {
-        timestamp: {
-          type: "date",
-        },
-      },
-      reverse: "chewedBy",
-    },
-    loves: {
-      fields: {},
-      reverse: "lovedBy",
-    },
-    owns: {
-      fields: {},
-      reverse: "ownedBy",
-    },
-    fears: {
-      fields: {},
-      reverse: "fearedBy",
-    },
-  },
-} as const satisfies GraphDefinition<
-  "bone" | "dog" | "user",
-  "chews" | "owns" | "loves" | "fears"
->;
-
-let dog: InstantiatedVertex<
-  "bone" | "dog" | "user",
-  "chews" | "owns" | "loves" | "fears",
-  typeof g,
-  "dog"
->;
-let bone: InstantiatedVertex<
-  "bone" | "dog" | "user",
-  "chews" | "owns" | "loves" | "fears",
-  typeof g,
-  "bone"
->;
-let user: InstantiatedVertex<
-  "bone" | "dog" | "user",
-  "chews" | "owns" | "loves" | "fears",
-  typeof g,
-  "user"
->;
-
-user.owns.dog.ownedBy.user.lovedBy.dog.chews.bone.chewedBy.dog.fearedBy.user.owns.dog
-  .as("dog")
-  .fearedBy.user.where((traversal) => traversal.has().owns);
