@@ -2,7 +2,7 @@ import { process } from "gremlin";
 import { BaseTraversal, TraversalContext } from "../../types";
 import { SupportedIntransitiveMethods } from "./SupportedMethods";
 
-export class TokkieBaseTraversal implements BaseTraversal {
+export abstract class TokkieBaseTraversal implements BaseTraversal {
   constructor(
     public $: process.GraphTraversal,
     public context: TraversalContext,

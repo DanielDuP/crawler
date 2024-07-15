@@ -4,10 +4,12 @@ import { SupportedIntransitiveMethods } from "./SupportedMethods";
 import { describe, it, expect, vi, Mocked, beforeEach } from "vitest";
 import { TraversalContext } from "../../types";
 
+class ConcreteTokkieTraversal extends TokkieBaseTraversal {}
+
 describe("TokkieBaseTraversal", () => {
   let mockGraphTraversal: Mocked<process.GraphTraversal>;
   let mockContext: TraversalContext;
-  let traversal: TokkieBaseTraversal;
+  let traversal: ConcreteTokkieTraversal;
 
   beforeEach(() => {
     mockGraphTraversal = {
@@ -35,11 +37,11 @@ describe("TokkieBaseTraversal", () => {
 
     mockContext = {} as TraversalContext;
 
-    traversal = new TokkieBaseTraversal(mockGraphTraversal, mockContext);
+    traversal = new ConcreteTokkieTraversal(mockGraphTraversal, mockContext);
   });
 
-  it("should create an instance of TokkieBaseTraversal", () => {
-    expect(traversal).toBeInstanceOf(TokkieBaseTraversal);
+  it("should create an instance of ConcreteTokkieTraversal", () => {
+    expect(traversal).toBeInstanceOf(ConcreteTokkieTraversal);
   });
 
   it("should set up base functions for all supported intransitive methods", () => {
