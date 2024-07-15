@@ -7,7 +7,7 @@ export class TokkieNullTraversal implements BaseTraversal, NullTraversal {
     public context: TraversalContext,
   ) {}
 
-  next(): Promise<void> {
-    throw new Error("Not implemented");
+  async next(): Promise<void> {
+    await this.$.next();
   }
 }

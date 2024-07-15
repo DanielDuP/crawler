@@ -10,6 +10,6 @@ export class TokkieValueTraversal<T extends any>
   ) {}
 
   next(): Promise<T> {
-    throw new Error("Not implemented");
+    return this.next();
   }
 }
