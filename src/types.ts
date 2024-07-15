@@ -140,10 +140,22 @@ export interface TraversalMethods {
 type TokkiePredicate = IntransitiveTraversalMethods;
 
 type EdgeCardinality = "oneToOne" | "oneToMany" | "manyToOne" | "manyToMany";
+
 type SchemaField = {
   type: "string" | "number" | "boolean" | "date";
   nullable?: boolean;
 };
+
+export type TypeFromSchemaField<S extends SchemaField> =
+  S["type"] extends "string"
+    ? string
+    : S["type"] extends "number"
+      ? number
+      : S["type"] extends "boolean"
+        ? boolean
+        : S["type"] extends "date"
+          ? Date
+          : never;
 
 export type SchemaDefinition = {
   [K in string]: SchemaField;

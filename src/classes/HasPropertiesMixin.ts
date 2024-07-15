@@ -3,11 +3,11 @@ import {
   GenericConstructor,
   PropertyTraversal,
   SchemaDefinition,
+  TypeFromSchemaField,
 } from "../types";
 
 interface HasPropertiesStatic<S extends SchemaDefinition> {
-  label: string;
-  property<K extends keyof S>(key: K, value: string): this;
+  property<K extends keyof S>(key: K, value: TypeFromSchemaField<S[K]>): this;
 }
 
 export type HasProperties<S extends SchemaDefinition> =
@@ -20,9 +20,11 @@ export function HasPropertiesMixin<
   S extends SchemaDefinition,
 >(Base: TBase, label: string) {
   return class extends Base implements HasPropertiesStatic<S> {
-    public label = label;
-    //label(): TokkieValueTraversal<number | undefined> {
-    //  return new TokkieValueTraversal<string>(this.$, this.context);
-    //}
+    property<K extends keyof S>(
+      key: K,
+      value: TypeFromSchemaField<S[K]>,
+    ): this {
+      throw new Error("Method not implemented.");
+    }
   };
 }
