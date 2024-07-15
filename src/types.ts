@@ -169,6 +169,10 @@ export type TypeFromSchemaField<S extends SchemaField> =
           ? Date
           : never;
 
+export type RecordFromSchemaDefinition<S extends SchemaDefinition> = {
+  [K in keyof S]: TypeFromSchemaField<S[K]>;
+};
+
 export type SchemaDefinition = {
   [K in string]: SchemaField;
 };
